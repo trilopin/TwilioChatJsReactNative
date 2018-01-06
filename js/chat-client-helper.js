@@ -19,6 +19,7 @@ export default class ChatClientHelper {
 
   login(identity, pushChannel, registerForPushCallback, showPushCallback) {
     let that = this;
+    that.log.info('login', '*** START');
     return fetch(`${this.host}/chat-client-configuration.json`)
       .then((response) => {
         let chatClientConfig = response.json();
@@ -26,13 +27,14 @@ export default class ChatClientHelper {
         return this.getToken(identity, pushChannel)
           .then(function(token) {
             that.log.info('ChatClientHelper', 'got chat token', token);
+            that.log.info("login", "*** CREATING CLIENT");
             return TwilioChatClient.create(token, chatClientConfig.options || {}).then((chatClient) => {
               that.client = chatClient;
               that.accessManager = new TwilioAccessManager(token);
               that.accessManager.on('tokenUpdated', am => that.client.updateToken(am.token));
               that.accessManager.on('tokenExpired', () =>
                 that.getToken(identity, pushChannel)
-                  .then(newData => that.accessManager.updateToken(newData)));
+                .then(newData => that.accessManager.updateToken(newData)));
               that.client.on('pushNotification', obj => {
                 if (obj && showPushCallback) {
                   showPushCallback(that.log, obj);
@@ -43,6 +45,8 @@ export default class ChatClientHelper {
               if (registerForPushCallback) {
                 registerForPushCallback(that.log, that.client);
               }
+              that.log.info("login", "*** CREATING CHANNEL");
+              that.createChannel();
             });
           })
           .catch((err) => {
@@ -53,6 +57,21 @@ export default class ChatClientHelper {
         that.log.error('login', 'can\'t fetch Chat Client configuration', err);
       });
   };
+
+  createChannel() {
+    return this.client
+      .createChannel()
+      .then(channel => {
+        channel.join().then(channel => {
+          this.log.info("login", "*** END");
+          channel.sendMessage("Holy shit!");
+        });
+      })
+      .catch(err => {
+        this.log.error("createChannel", "can't create channel", err);
+      });
+
+  }
 
   getToken(identity, pushChannel) {
     if (!pushChannel) {
