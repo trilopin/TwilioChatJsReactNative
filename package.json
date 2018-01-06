@@ -13,7 +13,7 @@
     "es6-shim": "^0.35.3",
     "events": "^1.1.1",
     "react": "^16.2.0",
-    "react-native": "0.45.1",
+    "react-native": "0.51",
     "twilio-chat": "^2.0.1",
     "twilio-common": "^0.1.7",
     "util": "^0.10.3"
